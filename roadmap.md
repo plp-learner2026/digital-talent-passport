@@ -6,4 +6,4 @@
 - [x] Consented passports, QR verification, PDF downloads
 - [x] Data-based impact and demonstration records
 - [x] Tests and mobile/desktop verification
-- [ ] Assign the owner's chosen administrator account — waiting for account choice
+- [x] Assign the owner's chosen administrator account
