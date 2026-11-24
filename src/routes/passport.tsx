@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCandidate } from "@/hooks/use-candidate";
 import { Workspace, SignInPrompt } from "@/components/site";
 import { PassportCard } from "@/components/passport-card";
+import { DemoBanner, useDemoTalent } from "@/components/demo";
 import { Button } from "@/components/ui/button";
 import { pageHead } from "@/lib/talent";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +21,7 @@ function Passport() {
   const { data, isPending } = useCandidate();
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
+  const demoQ = useDemoTalent();
   const [sharing, setSharing] = useState(false);
   useEffect(() => {
     setSharing(Boolean(data?.profile.public_consent));
@@ -52,7 +54,35 @@ function Passport() {
       {isPending ? (
         <p>Loading…</p>
       ) : !data ? (
-        <SignInPrompt />
+        demoQ.data ? (
+          <>
+            <DemoBanner note="This is a sample passport. PDF download and public sharing are turned off." />
+            <PassportCard
+              demo
+              download
+              data={{
+                full_name: demoQ.data.full_name,
+                passport_id: "DEMO-0001",
+                category: demoQ.data.category,
+                education: demoQ.data.education,
+                experience: demoQ.data.experience,
+                credentials: [{ kind: "Academic certificate", status: demoQ.data.status }],
+                assessments: [
+                  {
+                    category: demoQ.data.category,
+                    score: demoQ.data.score,
+                    passed: true,
+                    created_at: new Date().toISOString(),
+                  },
+                ],
+              }}
+            />
+          </>
+        ) : demoQ.isPending ? (
+          <p>Loading…</p>
+        ) : (
+          <SignInPrompt />
+        )
       ) : !data.assessments?.some((a) => a.passed) ? (
         <div className="panel max-w-xl">
           <h2 className="font-bold text-xl mb-3">Your passport is waiting for you</h2>

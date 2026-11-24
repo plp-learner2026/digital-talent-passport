@@ -65,6 +65,12 @@ function Index() {
               </Link>
             </Button>
             <Button asChild variant="light">
+              <Link to="/passport">
+                Explore the demo
+                <MoveUpRight />
+              </Link>
+            </Button>
+            <Button asChild variant="light">
               <Link to="/explore">
                 Explore the platform
                 <MoveUpRight />

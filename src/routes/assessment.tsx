@@ -2,8 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCandidate } from "@/hooks/use-candidate";
-import { Workspace, SignInPrompt, Status } from "@/components/site";
-import { categories, questionBanks, pageHead } from "@/lib/talent";
+import { Workspace, Status } from "@/components/site";
+import { categories, questionBanks, pageHead, assessmentResult } from "@/lib/talent";
+import { DemoBanner } from "@/components/demo";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -30,6 +31,10 @@ function Assess() {
   async function submit() {
     if (answers.length !== 5 || answers.some((a) => a === undefined)) {
       toast.error("Answer all five questions");
+      return;
+    }
+    if (!data) {
+      setResult(assessmentResult(answers));
       return;
     }
     setBusy(true);
@@ -65,10 +70,11 @@ function Assess() {
     >
       {isPending ? (
         <p>Loading…</p>
-      ) : !data ? (
-        <SignInPrompt />
       ) : (
         <>
+          {!data && (
+            <DemoBanner note="Practice run: your score is shown in your browser only and is not saved." />
+          )}
           <div className="panel max-w-3xl">
             {result ? (
               <div className="text-center py-8">
@@ -82,15 +88,17 @@ function Assess() {
                 </div>
                 <Status status={result.passed ? "Skills assessed" : "Bridging recommended"} />
                 <p className="text-sm text-muted-foreground my-6">
-                  {result.passed
-                    ? "You met the 4/5 pass threshold. Your passport now includes this assessed skill."
-                    : "You need at least 4 correct answers to pass. Review your knowledge and try again."}
+                  {!data
+                    ? "Practice result only. Sign in to record a real assessment on your passport."
+                    : result.passed
+                      ? "You met the 4/5 pass threshold. Your passport now includes this assessed skill."
+                      : "You need at least 4 correct answers to pass. Review your knowledge and try again."}
                 </p>
                 <div className="flex justify-center gap-3">
                   <Button variant="outline" onClick={reset}>
                     Try another assessment
                   </Button>
-                  {result.passed && (
+                  {result.passed && data && (
                     <Button asChild>
                       <Link to="/passport">
                         View my passport
@@ -174,7 +182,7 @@ function Assess() {
                     </Button>
                   ) : (
                     <Button disabled={busy || answers[index] === undefined} onClick={submit}>
-                      {busy ? "Calculating…" : "Submit assessment"}
+                      {busy ? "Calculating…" : data ? "Submit assessment" : "See practice score"}
                     </Button>
                   )}
                 </div>
@@ -186,10 +194,10 @@ function Assess() {
             professional licensing. Practical assessment and expanded question banks are future
             additions.
           </p>
-          {Boolean(data.assessments?.length) && (
+          {Boolean(data?.assessments?.length) && (
             <section className="mt-8 max-w-3xl">
               <h2 className="font-bold mb-4">Your assessment history</h2>
-              {data.assessments?.map((a) => (
+              {data?.assessments?.map((a) => (
                 <div className="panel mb-3 flex justify-between items-center" key={a.id}>
                   <div className="text-sm font-semibold">
                     {a.category}
