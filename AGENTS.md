@@ -28,3 +28,10 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Application architecture
+- Public content routes use leaf metadata and shared Header/Footer in the root; candidate pages show inline sign-in prompts because RLS protects every private operation.
+- Roles live in user_roles, and administrator authorization is enforced by database policies; never derive privilege from profile fields or browser state.
+- Assessment scoring uses the authenticated database RPC and a versioned question bank; browser results never directly write scores.
+- Public passport and impact reads use narrow RPC projections through server functions; private documents stay in an owner-prefixed private storage bucket.
+- Demonstration talents live in a separate seeded table and are excluded from all real impact counts to avoid misleading outcomes.
