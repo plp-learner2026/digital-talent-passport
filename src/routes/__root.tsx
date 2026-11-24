@@ -12,9 +12,9 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { Header, Footer } from '@/components/site';
-import { Toaster } from '@/components/ui/sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { Header, Footer } from "@/components/site";
+import { Toaster } from "@/components/ui/sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
   return (
@@ -85,14 +85,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Talent Passport" },
-      { name: "description", content: "Unlocking displaced talent through credential review and skills validation in Kenya." },
+      {
+        name: "description",
+        content:
+          "Unlocking displaced talent through credential review and skills validation in Kenya.",
+      },
       { property: "og:title", content: "Talent Passport" },
       { property: "og:description", content: "Your skills. Your story. Your next chapter." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
-      { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap' },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap",
+      },
       {
         rel: "stylesheet",
         href: appCss,
@@ -124,12 +131,12 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange(event => {
-      if (!['SIGNED_IN','SIGNED_OUT','USER_UPDATED'].includes(event)) return;
-      queryClient.removeQueries({queryKey:['candidate']});
-      queryClient.removeQueries({queryKey:['admin-data']});
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (!["SIGNED_IN", "SIGNED_OUT", "USER_UPDATED"].includes(event)) return;
+      queryClient.removeQueries({ queryKey: ["candidate"] });
+      queryClient.removeQueries({ queryKey: ["admin-data"] });
       router.invalidate();
-      if(event !== 'SIGNED_OUT') queryClient.invalidateQueries();
+      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
     });
     return () => data.subscription.unsubscribe();
   }, [queryClient, router]);

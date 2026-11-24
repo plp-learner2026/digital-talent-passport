@@ -1,8 +1,9 @@
 # Talent Passport
-- [ ] Landing and navigation
-- [ ] Accounts and candidate registration
-- [ ] Private credential submission and administrator review
-- [ ] Five-question assessments and scoring
-- [ ] Consented passports, QR verification, PDF downloads
-- [ ] Data-based impact and demonstration records
-- [ ] Tests and mobile/desktop verification
+- [x] Landing and navigation
+- [x] Accounts and candidate registration
+- [x] Private credential submission and administrator review
+- [x] Five-question assessments and scoring
+- [x] Consented passports, QR verification, PDF downloads
+- [x] Data-based impact and demonstration records
+- [x] Tests and mobile/desktop verification
+- [ ] Assign the owner's chosen administrator account — waiting for account choice

@@ -1,12 +1,142 @@
-import { createFileRoute,Link } from '@tanstack/react-router'
-import { queryOptions,useSuspenseQuery } from '@tanstack/react-query'
-import { getDemo } from '@/lib/data.functions'
-import { pageHead } from '@/lib/talent'
-import { PassportCard } from '@/components/passport-card'
-import { Button } from '@/components/ui/button'
-import { Status } from '@/components/site'
-import { ArrowRight, UserRoundPlus, ClipboardCheck, BookUser } from 'lucide-react'
-import { useState } from 'react'
-const opts=queryOptions({queryKey:['demo'],queryFn:()=>getDemo()})
-export const Route=createFileRoute('/explore')({loader:({context})=>context.queryClient.ensureQueryData(opts),head:()=>pageHead('Explore the platform','Discover the registration, human credential review and assessed digital passport journey.'),component:Explore})
-function Explore(){const {data}=useSuspenseQuery(opts);const [selected,setSelected]=useState<string|null>(null);const candidate=data?.find(d=>d.id===selected);return <main className="workspace"><div className="page-width"><span className="eyebrow text-primary">FROM EXPERIENCE TO OPPORTUNITY</span><h1 className="page-title mt-3">Your pathway to recognition</h1><p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">Create a profile, submit your qualifications for human review, and demonstrate your professional knowledge. Your passport keeps credential review and skills assessment clearly separate.</p><div className="step-grid mt-8 mb-10">{[[UserRoundPlus,'01','Register your talent','Share your professional story, education and experience.'],[ClipboardCheck,'02','Validate your skills','Complete an assessment and submit documents for review.'],[BookUser,'03','Receive your passport','Download your professional record and choose whether to share it.']].map(([Icon,n,title,text])=>{const I=Icon as typeof UserRoundPlus;return <article className="step-card bg-background" key={String(n)}><div className="step-icon"><I/></div><span className="step-number">{String(n)}</span><h3>{String(title)}</h3><p>{String(text)}</p></article>})}</div><div className="section-heading"><div><h2 className="text-2xl font-bold">Meet the demonstration talents</h2><p className="text-sm text-muted-foreground mt-2">Fictional profiles stored separately from real candidate activity.</p></div><Button asChild><Link to="/register">Start your own journey<ArrowRight/></Link></Button></div><div className="step-grid">{data?.map(d=><article className="panel" key={d.id}><div className="flex items-center gap-3 mb-5"><div className="step-icon font-bold">{d.full_name.split(' ').map(n=>n[0]).join('')}</div><div><h3 className="font-bold">{d.full_name}</h3><p className="text-xs text-muted-foreground mt-1">{d.category} · {d.city}</p></div></div><p className="text-sm mb-2">{d.education}</p><p className="text-xs text-muted-foreground mb-4">{d.experience} years of experience · Skills score {d.score}/5</p><Status status={d.status}/><Button variant="outline" className="w-full mt-5" onClick={()=>setSelected(selected===d.id?null:d.id)}>{selected===d.id?'Close passport':'View demo passport'}<ArrowRight/></Button></article>)}</div>{candidate&&<div className="mt-8"><p className="notice max-w-[760px] mx-auto">Demonstration only — this record is fictional, is not publicly verifiable and has no official recognition.</p><PassportCard demo data={{...candidate,passport_id:candidate.id,credentials:[{kind:'Academic certificate',status:candidate.status}],assessments:[{category:candidate.category,score:candidate.score,passed:true,created_at:'2026-11-20'}]}}/></div>}</div></main>}
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { getDemo } from "@/lib/data.functions";
+import { pageHead } from "@/lib/talent";
+import { PassportCard } from "@/components/passport-card";
+import { Button } from "@/components/ui/button";
+import { Status } from "@/components/site";
+import { ArrowRight, UserRoundPlus, ClipboardCheck, BookUser } from "lucide-react";
+import { useState } from "react";
+const opts = queryOptions({ queryKey: ["demo"], queryFn: () => getDemo() });
+export const Route = createFileRoute("/explore")({
+  loader: ({ context }) => context.queryClient.ensureQueryData(opts),
+  head: () =>
+    pageHead(
+      "Explore the platform",
+      "Discover the registration, human credential review and assessed digital passport journey.",
+    ),
+  component: Explore,
+});
+function Explore() {
+  const { data } = useSuspenseQuery(opts);
+  const [selected, setSelected] = useState<string | null>(null);
+  const candidate = data?.find((d) => d.id === selected);
+  return (
+    <main className="workspace">
+      <div className="page-width">
+        <span className="eyebrow text-primary">FROM EXPERIENCE TO OPPORTUNITY</span>
+        <h1 className="page-title mt-3">Your pathway to recognition</h1>
+        <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
+          Create a profile, submit your qualifications for human review, and demonstrate your
+          professional knowledge. Your passport keeps credential review and skills assessment
+          clearly separate.
+        </p>
+        <div className="step-grid mt-8 mb-10">
+          {[
+            [
+              UserRoundPlus,
+              "01",
+              "Register your talent",
+              "Share your professional story, education and experience.",
+            ],
+            [
+              ClipboardCheck,
+              "02",
+              "Validate your skills",
+              "Complete an assessment and submit documents for review.",
+            ],
+            [
+              BookUser,
+              "03",
+              "Receive your passport",
+              "Download your professional record and choose whether to share it.",
+            ],
+          ].map(([Icon, n, title, text]) => {
+            const I = Icon as typeof UserRoundPlus;
+            return (
+              <article className="step-card bg-background" key={String(n)}>
+                <div className="step-icon">
+                  <I />
+                </div>
+                <span className="step-number">{String(n)}</span>
+                <h3>{String(title)}</h3>
+                <p>{String(text)}</p>
+              </article>
+            );
+          })}
+        </div>
+        <div className="section-heading">
+          <div>
+            <h2 className="text-2xl font-bold">Meet the demonstration talents</h2>
+            <p className="text-sm text-muted-foreground mt-2">
+              Fictional profiles stored separately from real candidate activity.
+            </p>
+          </div>
+          <Button asChild>
+            <Link to="/register">
+              Start your own journey
+              <ArrowRight />
+            </Link>
+          </Button>
+        </div>
+        <div className="step-grid">
+          {data?.map((d) => (
+            <article className="panel" key={d.id}>
+              <div className="flex items-center gap-3 mb-5">
+                <div className="step-icon font-bold">
+                  {d.full_name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")}
+                </div>
+                <div>
+                  <h3 className="font-bold">{d.full_name}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {d.category} · {d.city}
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm mb-2">{d.education}</p>
+              <p className="text-xs text-muted-foreground mb-4">
+                {d.experience} years of experience · Skills score {d.score}/5
+              </p>
+              <Status status={d.status} />
+              <Button
+                variant="outline"
+                className="w-full mt-5"
+                onClick={() => setSelected(selected === d.id ? null : d.id)}
+              >
+                {selected === d.id ? "Close passport" : "View demo passport"}
+                <ArrowRight />
+              </Button>
+            </article>
+          ))}
+        </div>
+        {candidate && (
+          <div className="mt-8">
+            <p className="notice max-w-[760px] mx-auto">
+              Demonstration only — this record is fictional, is not publicly verifiable and has no
+              official recognition.
+            </p>
+            <PassportCard
+              demo
+              data={{
+                ...candidate,
+                passport_id: candidate.id,
+                credentials: [{ kind: "Academic certificate", status: candidate.status }],
+                assessments: [
+                  {
+                    category: candidate.category,
+                    score: candidate.score,
+                    passed: true,
+                    created_at: "2026-11-20",
+                  },
+                ],
+              }}
+            />
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}

@@ -1,3 +1,38 @@
-import { useQuery } from '@tanstack/react-query'
-import { supabase } from '@/integrations/supabase/client'
-export function useCandidate(){return useQuery({queryKey:['candidate'],queryFn:async()=>{const {data:{user}}=await supabase.auth.getUser();if(!user)return null;const profile=await supabase.from('profiles').select('*').eq('id',user.id).single();if(profile.error)throw profile.error;const [credentials,assessments,role]=await Promise.all([supabase.from('credentials').select('*').eq('candidate_id',user.id).order('created_at',{ascending:false}),supabase.from('assessments').select('*').eq('candidate_id',user.id).order('created_at',{ascending:false}),supabase.rpc('has_role',{_user_id:user.id,_role:'admin'})]);if(credentials.error||assessments.error||role.error)throw credentials.error||assessments.error||role.error;return {user,profile:profile.data,credentials:credentials.data,assessments:assessments.data,isAdmin:role.data}},retry:false})}
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+export function useCandidate() {
+  return useQuery({
+    queryKey: ["candidate"],
+    queryFn: async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return null;
+      const profile = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      if (profile.error) throw profile.error;
+      const [credentials, assessments, role] = await Promise.all([
+        supabase
+          .from("credentials")
+          .select("*")
+          .eq("candidate_id", user.id)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("assessments")
+          .select("*")
+          .eq("candidate_id", user.id)
+          .order("created_at", { ascending: false }),
+        supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }),
+      ]);
+      if (credentials.error || assessments.error || role.error)
+        throw credentials.error || assessments.error || role.error;
+      return {
+        user,
+        profile: profile.data,
+        credentials: credentials.data,
+        assessments: assessments.data,
+        isAdmin: role.data,
+      };
+    },
+    retry: false,
+  });
+}

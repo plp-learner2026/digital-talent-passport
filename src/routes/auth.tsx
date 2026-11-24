@@ -1,12 +1,187 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useEffect,useState,type FormEvent } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
-import { supabase } from '@/integrations/supabase/client'
-import { lovable } from '@/integrations/lovable/index'
-import { LovableMark } from '@lovable.dev/cloud-auth-js/react'
-import { pageHead } from '@/lib/talent'
-import { z } from 'zod'
-import { toast } from 'sonner'
-export const Route=createFileRoute('/auth')({head:()=>pageHead('Sign in','Securely sign in or create your Talent Passport account.'),component:Auth})
-function Auth(){const [signup,setSignup]=useState(false);const [forgot,setForgot]=useState(false);const [busy,setBusy]=useState(false);const navigate=useNavigate();const qc=useQueryClient();useEffect(()=>{supabase.auth.getUser().then(({data})=>{if(data.user)navigate({to:'/register'})})},[navigate]);async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();const f=new FormData(e.currentTarget);const email=String(f.get('email'));const password=String(f.get('password')||'');const check=z.object({email:z.email(),password:forgot?z.string():z.string().min(8)}).safeParse({email,password});if(!check.success){toast.error(check.error.issues[0]?.message||'Check your details');return}setBusy(true);try{if(forgot){const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:`${window.location.origin}/reset-password`});if(error)throw error;toast.success('Check your email for a password reset link')}else if(signup){const {data,error}=await supabase.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin,data:{full_name:String(f.get('name')||'').slice(0,100)}}});if(error)throw error;if(!data.session)toast.success('Check your email to confirm your account before signing in');else{await qc.invalidateQueries();navigate({to:'/register'})}}else{const {error}=await supabase.auth.signInWithPassword({email,password});if(error)throw error;await qc.invalidateQueries();navigate({to:'/register'})}}catch(e){toast.error(e instanceof Error?e.message:'Sign in failed')}finally{setBusy(false)}}async function social(provider:'google'|'lovable'){const result=await lovable.auth.signInWithOAuth(provider,{redirect_uri:`${window.location.origin}/auth`});if(result.error){toast.error(result.error.message);return}if(!result.redirected){await qc.invalidateQueries();navigate({to:'/register'})}}return <main className="workspace"><div className="page-width"><section className="panel auth-panel"><span className="eyebrow text-primary">YOUR NEXT CHAPTER</span><h1 className="page-title mt-4">{forgot?'Reset your password':signup?'Create your account':'Welcome back'}</h1><p className="text-sm text-muted-foreground mb-7">Your experience deserves to be recognised.</p><form onSubmit={submit} className="flex flex-col gap-5">{signup&&!forgot&&<label className="field">Full name<input name="name" required minLength={2} maxLength={100} autoComplete="name"/></label>}<label className="field">Email address<input name="email" type="email" required maxLength={255} autoComplete="email"/></label>{!forgot&&<label className="field">Password<input name="password" type="password" required minLength={8} maxLength={128} autoComplete={signup?'new-password':'current-password'}/></label>}<Button disabled={busy}>{busy?'Please wait…':forgot?'Send reset link':signup?'Create account':'Sign in'}</Button></form>{!forgot&&<><div className="text-center text-xs text-muted-foreground my-5">or continue with</div><div className="flex flex-col gap-3"><Button variant="outline" onClick={()=>social('google')}><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.09z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"/></svg>Continue with Google</Button><Button variant="outline" onClick={()=>social('lovable')}><LovableMark/>Continue with Lovable</Button></div></>}<div className="flex justify-between mt-6"><Button variant="link" className="px-0 text-xs" onClick={()=>{setForgot(false);setSignup(!signup)}}>{signup?'Already have an account? Sign in':'Create an account'}</Button><Button variant="link" className="px-0 text-xs" onClick={()=>setForgot(!forgot)}>{forgot?'Back to sign in':'Forgot password?'}</Button></div><p className="text-xs text-muted-foreground leading-relaxed mt-6">Your documents stay private. You decide whether employers can view your professional passport.</p></section></div></main>}
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState, type FormEvent } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
+import { LovableMark } from "@lovable.dev/cloud-auth-js/react";
+import { pageHead } from "@/lib/talent";
+import { z } from "zod";
+import { toast } from "sonner";
+export const Route = createFileRoute("/auth")({
+  head: () => pageHead("Sign in", "Securely sign in or create your Talent Passport account."),
+  component: Auth,
+});
+function Auth() {
+  const [signup, setSignup] = useState(false);
+  const [forgot, setForgot] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) navigate({ to: "/register" });
+    });
+  }, [navigate]);
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    const email = String(f.get("email"));
+    const password = String(f.get("password") || "");
+    const check = z
+      .object({ email: z.email(), password: forgot ? z.string() : z.string().min(8) })
+      .safeParse({ email, password });
+    if (!check.success) {
+      toast.error(check.error.issues[0]?.message || "Check your details");
+      return;
+    }
+    setBusy(true);
+    try {
+      if (forgot) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        toast.success("Check your email for a password reset link");
+      } else if (signup) {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: { full_name: String(f.get("name") || "").slice(0, 100) },
+          },
+        });
+        if (error) throw error;
+        if (!data.session)
+          toast.success("Check your email to confirm your account before signing in");
+        else {
+          await qc.invalidateQueries();
+          navigate({ to: "/register" });
+        }
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        await qc.invalidateQueries();
+        navigate({ to: "/register" });
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Sign in failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function social(provider: "google" | "lovable") {
+    const result = await lovable.auth.signInWithOAuth(provider, {
+      redirect_uri: `${window.location.origin}/auth`,
+    });
+    if (result.error) {
+      toast.error(result.error.message);
+      return;
+    }
+    if (!result.redirected) {
+      await qc.invalidateQueries();
+      navigate({ to: "/register" });
+    }
+  }
+  return (
+    <main className="workspace">
+      <div className="page-width">
+        <section className="panel auth-panel">
+          <span className="eyebrow text-primary">YOUR NEXT CHAPTER</span>
+          <h1 className="page-title mt-4">
+            {forgot ? "Reset your password" : signup ? "Create your account" : "Welcome back"}
+          </h1>
+          <p className="text-sm text-muted-foreground mb-7">
+            Your experience deserves to be recognised.
+          </p>
+          <form onSubmit={submit} className="flex flex-col gap-5">
+            {signup && !forgot && (
+              <label className="field">
+                Full name
+                <input name="name" required minLength={2} maxLength={100} autoComplete="name" />
+              </label>
+            )}
+            <label className="field">
+              Email address
+              <input name="email" type="email" required maxLength={255} autoComplete="email" />
+            </label>
+            {!forgot && (
+              <label className="field">
+                Password
+                <input
+                  name="password"
+                  type="password"
+                  required
+                  minLength={8}
+                  maxLength={128}
+                  autoComplete={signup ? "new-password" : "current-password"}
+                />
+              </label>
+            )}
+            <Button disabled={busy}>
+              {busy
+                ? "Please wait…"
+                : forgot
+                  ? "Send reset link"
+                  : signup
+                    ? "Create account"
+                    : "Sign in"}
+            </Button>
+          </form>
+          {!forgot && (
+            <>
+              <div className="text-center text-xs text-muted-foreground my-5">or continue with</div>
+              <div className="flex flex-col gap-3">
+                <Button variant="outline" onClick={() => social("google")}>
+                  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24">
+                    <path
+                      fill="#4285F4"
+                      d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.09z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"
+                    />
+                  </svg>
+                  Continue with Google
+                </Button>
+                <Button variant="outline" onClick={() => social("lovable")}>
+                  <LovableMark />
+                  Continue with Lovable
+                </Button>
+              </div>
+            </>
+          )}
+          <div className="flex justify-between mt-6">
+            <Button
+              variant="link"
+              className="px-0 text-xs"
+              onClick={() => {
+                setForgot(false);
+                setSignup(!signup);
+              }}
+            >
+              {signup ? "Already have an account? Sign in" : "Create an account"}
+            </Button>
+            <Button variant="link" className="px-0 text-xs" onClick={() => setForgot(!forgot)}>
+              {forgot ? "Back to sign in" : "Forgot password?"}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed mt-6">
+            Your documents stay private. You decide whether employers can view your professional
+            passport.
+          </p>
+        </section>
+      </div>
+    </main>
+  );
+}

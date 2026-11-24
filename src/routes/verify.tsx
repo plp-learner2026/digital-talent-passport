@@ -1,13 +1,98 @@
-import { createFileRoute,useNavigate } from '@tanstack/react-router'
-import { useState,type FormEvent } from 'react'
-import { queryOptions,useSuspenseQuery } from '@tanstack/react-query'
-import { z } from 'zod'
-import { verifyPassport } from '@/lib/data.functions'
-import { PassportCard,type PassportData } from '@/components/passport-card'
-import { Button } from '@/components/ui/button'
-import { pageHead } from '@/lib/talent'
-import { Search,ShieldCheck } from 'lucide-react'
-const options=(id:string)=>queryOptions({queryKey:['verification',id],queryFn:()=>verifyPassport({data:{id}}),staleTime:0})
-export const Route=createFileRoute('/verify')({validateSearch:(s:Record<string,unknown>):{id?:string}=>{const r=z.string().trim().min(3).max(40).regex(/^[a-zA-Z0-9-]+$/).safeParse(s['id']);return r.success?{id:r.data}:{}},loader:async({context,location})=>{const id=new URLSearchParams(location.searchStr).get('id');if(id&&/^[a-zA-Z0-9-]{3,40}$/.test(id))await context.queryClient.ensureQueryData(options(id))},head:()=>pageHead('Verify a talent passport','Check a consented Talent Passport without accessing private candidate documents or contact details.'),component:Verify})
-function Result({id}:{id:string}){const {data}=useSuspenseQuery(options(id));if(!data||typeof data!=='object'||Array.isArray(data))return <div className="notice max-w-2xl mx-auto">No public passport found. Check the ID. The candidate may not have issued a passport or may have chosen to keep it private.</div>;return <div className="mt-8"><PassportCard data={data as unknown as PassportData}/></div>}
-function Verify(){const {id}=Route.useSearch();const [input,setInput]=useState(id||'');const navigate=useNavigate();function submit(e:FormEvent){e.preventDefault();if(/^[a-zA-Z0-9-]{3,40}$/.test(input))navigate({to:'/verify',search:{id:input.toUpperCase()}})}return <main className="workspace"><div className="page-width"><div className="text-center max-w-2xl mx-auto"><ShieldCheck className="mx-auto text-primary size-10 mb-5"/><h1 className="page-title">Verify a talent passport</h1><p className="text-muted-foreground text-sm leading-relaxed">A clear view of assessed skills and reviewed credentials. Only information the candidate has agreed to share is displayed.</p><form onSubmit={submit} className="flex gap-3 mt-8"><label className="field flex-1"><span className="sr-only">Passport identification number</span><input value={input} onChange={e=>setInput(e.target.value)} required pattern="[a-zA-Z0-9-]{3,40}" maxLength={40} placeholder="Enter passport ID · TP-…"/></label><Button type="submit" className="h-11"><Search/>Verify</Button></form><p className="text-xs text-muted-foreground mt-4">Or scan the QR code on a passport with your phone camera.</p></div>{id&&<Result id={id}/>}</div></main>}
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState, type FormEvent } from "react";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { z } from "zod";
+import { verifyPassport } from "@/lib/data.functions";
+import { PassportCard, type PassportData } from "@/components/passport-card";
+import { Button } from "@/components/ui/button";
+import { pageHead } from "@/lib/talent";
+import { Search, ShieldCheck } from "lucide-react";
+const options = (id: string) =>
+  queryOptions({
+    queryKey: ["verification", id],
+    queryFn: () => verifyPassport({ data: { id } }),
+    staleTime: 0,
+  });
+export const Route = createFileRoute("/verify")({
+  validateSearch: (s: Record<string, unknown>): { id?: string } => {
+    const r = z
+      .string()
+      .trim()
+      .min(3)
+      .max(40)
+      .regex(/^[a-zA-Z0-9-]+$/)
+      .safeParse(s["id"]);
+    return r.success ? { id: r.data } : {};
+  },
+  loader: async ({ context, location }) => {
+    const id = new URLSearchParams(location.searchStr).get("id");
+    if (id && /^[a-zA-Z0-9-]{3,40}$/.test(id))
+      await context.queryClient.ensureQueryData(options(id));
+  },
+  head: () =>
+    pageHead(
+      "Verify a talent passport",
+      "Check a consented Talent Passport without accessing private candidate documents or contact details.",
+    ),
+  component: Verify,
+});
+function Result({ id }: { id: string }) {
+  const { data } = useSuspenseQuery(options(id));
+  if (!data || typeof data !== "object" || Array.isArray(data))
+    return (
+      <div className="notice max-w-2xl mx-auto">
+        No public passport found. Check the ID. The candidate may not have issued a passport or may
+        have chosen to keep it private.
+      </div>
+    );
+  return (
+    <div className="mt-8">
+      <PassportCard data={data as unknown as PassportData} />
+    </div>
+  );
+}
+function Verify() {
+  const { id } = Route.useSearch();
+  const [input, setInput] = useState(id || "");
+  const navigate = useNavigate();
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    if (/^[a-zA-Z0-9-]{3,40}$/.test(input))
+      navigate({ to: "/verify", search: { id: input.toUpperCase() } });
+  }
+  return (
+    <main className="workspace">
+      <div className="page-width">
+        <div className="text-center max-w-2xl mx-auto">
+          <ShieldCheck className="mx-auto text-primary size-10 mb-5" />
+          <h1 className="page-title">Verify a talent passport</h1>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            A clear view of assessed skills and reviewed credentials. Only information the candidate
+            has agreed to share is displayed.
+          </p>
+          <form onSubmit={submit} className="flex gap-3 mt-8">
+            <label className="field flex-1">
+              <span className="sr-only">Passport identification number</span>
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                required
+                pattern="[a-zA-Z0-9-]{3,40}"
+                maxLength={40}
+                placeholder="Enter passport ID · TP-…"
+              />
+            </label>
+            <Button type="submit" className="h-11">
+              <Search />
+              Verify
+            </Button>
+          </form>
+          <p className="text-xs text-muted-foreground mt-4">
+            Or scan the QR code on a passport with your phone camera.
+          </p>
+        </div>
+        {id && <Result id={id} />}
+      </div>
+    </main>
+  );
+}

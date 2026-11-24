@@ -8,6 +8,20 @@
       "when": 1795536293843,
       "tag": "0000_talent_passport_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795536824135,
+      "tag": "0001_profile_input_bounds",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795536880792,
+      "tag": "0002_restrict_function_execution",
+      "breakpoints": true
     }
   ]
 }

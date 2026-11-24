@@ -1,12 +1,177 @@
-import { Link, useLocation } from '@tanstack/react-router'
-import { useState, useEffect, type ReactNode } from 'react'
-import { BookUser, Menu, ArrowRight, LogOut, FileCheck2, ClipboardCheck, ContactRound, LayoutDashboard } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { supabase } from '@/integrations/supabase/client'
-import { toast } from 'sonner'
-export function Brand(){return <Link to="/" className="brand"><BookUser className="brand-symbol" strokeWidth={1.7}/>Talent<span className="font-normal">Passport</span></Link>}
-export function Header(){const [open,setOpen]=useState(false);const [signed,setSigned]=useState(false);const {pathname}=useLocation();useEffect(()=>{supabase.auth.getUser().then(({data})=>setSigned(Boolean(data.user)));const {data}=supabase.auth.onAuthStateChange((_e,s)=>setSigned(Boolean(s)));return()=>data.subscription.unsubscribe()},[]);const nav=<><Link to="/" data-active={pathname==='/'} onClick={()=>setOpen(false)}>Home</Link><Link to="/explore" data-active={pathname==='/explore'} onClick={()=>setOpen(false)}>How it works</Link><Link to="/verify" data-active={pathname==='/verify'} onClick={()=>setOpen(false)}>Verify a passport</Link><Link to="/impact" data-active={pathname==='/impact'} onClick={()=>setOpen(false)}>Our impact</Link></>;return <><header className="site-header"><div className="page-width header-inner"><Brand/><nav className="nav-links">{nav}</nav><div className="header-actions">{signed?<Button variant="ghost" size="icon" title="Sign out" onClick={async()=>{await supabase.auth.signOut();toast.success('Signed out')}}><LogOut/></Button>:<Link to="/auth" className="sign-in-link text-sm font-semibold">Sign in</Link>}<Button asChild variant="hero"><Link to="/register">{signed?'My profile':'Get started'}<ArrowRight/></Link></Button><Button variant="ghost" size="icon" className="mobile-menu" aria-label="Toggle menu" onClick={()=>setOpen(!open)}><Menu/></Button></div></div></header>{open&&<nav className="mobile-links">{nav}</nav>}</>}
-export function Footer(){return <footer className="site-footer"><div className="page-width footer-inner"><Brand/><span>Unlocking Displaced Talent · Kenya</span><div className="flex gap-5"><Link to="/verify">Verify a passport</Link><Link to="/admin">Administrator</Link><span>© {new Date().getFullYear()} Talent Passport</span></div></div></footer>}
-export function Workspace({title,subtitle,children}:{title:string;subtitle:string;children:ReactNode}){const {pathname}=useLocation();return <main className="workspace"><div className="page-width"><nav className="workspace-nav"><Link to="/register" data-active={pathname==='/register'}><ContactRound size={16}/>My profile</Link><Link to="/credentials" data-active={pathname==='/credentials'}><FileCheck2 size={16}/>Credentials</Link><Link to="/assessment" data-active={pathname==='/assessment'}><ClipboardCheck size={16}/>Skills assessment</Link><Link to="/passport" data-active={pathname==='/passport'}><BookUser size={16}/>My passport</Link><Link to="/impact" data-active={pathname==='/impact'}><LayoutDashboard size={16}/>Impact</Link></nav><h1 className="page-title">{title}</h1><p className="text-muted-foreground text-sm mb-8">{subtitle}</p>{children}</div></main>}
-export function SignInPrompt(){return <div className="panel max-w-xl"><h2 className="text-xl font-bold mb-3">Your talent journey starts here</h2><p className="text-sm text-muted-foreground mb-6">Sign in to keep your profile, documents and assessment results secure.</p><Button asChild><Link to="/auth">Sign in or create an account<ArrowRight/></Link></Button></div>}
-export function Status({status}:{status:string}){return <span className={`status ${status==='Verified'||status==='Skills assessed'?'verified':''}`}><FileCheck2 size={12}/>{status}</span>}
+import { Link, useLocation } from "@tanstack/react-router";
+import { useState, useEffect, type ReactNode } from "react";
+import {
+  BookUser,
+  Menu,
+  ArrowRight,
+  LogOut,
+  FileCheck2,
+  ClipboardCheck,
+  ContactRound,
+  LayoutDashboard,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+export function Brand() {
+  return (
+    <Link to="/" className="brand">
+      <BookUser className="brand-symbol" strokeWidth={1.7} />
+      Talent<span className="font-normal">Passport</span>
+    </Link>
+  );
+}
+export function Header() {
+  const [open, setOpen] = useState(false);
+  const [signed, setSigned] = useState(false);
+  const { pathname } = useLocation();
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setSigned(Boolean(data.user)));
+    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSigned(Boolean(s)));
+    return () => data.subscription.unsubscribe();
+  }, []);
+  const nav = (
+    <>
+      <Link to="/" data-active={pathname === "/"} onClick={() => setOpen(false)}>
+        Home
+      </Link>
+      <Link to="/explore" data-active={pathname === "/explore"} onClick={() => setOpen(false)}>
+        How it works
+      </Link>
+      <Link to="/verify" data-active={pathname === "/verify"} onClick={() => setOpen(false)}>
+        Verify a passport
+      </Link>
+      <Link to="/impact" data-active={pathname === "/impact"} onClick={() => setOpen(false)}>
+        Our impact
+      </Link>
+    </>
+  );
+  return (
+    <>
+      <header className="site-header">
+        <div className="page-width header-inner">
+          <Brand />
+          <nav className="nav-links">{nav}</nav>
+          <div className="header-actions">
+            {signed ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                title="Sign out"
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  toast.success("Signed out");
+                }}
+              >
+                <LogOut />
+              </Button>
+            ) : (
+              <Link to="/auth" className="sign-in-link text-sm font-semibold">
+                Sign in
+              </Link>
+            )}
+            <Button asChild variant="hero">
+              <Link to="/register">
+                {signed ? "My profile" : "Get started"}
+                <ArrowRight />
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="mobile-menu"
+              aria-label="Toggle menu"
+              onClick={() => setOpen(!open)}
+            >
+              <Menu />
+            </Button>
+          </div>
+        </div>
+      </header>
+      {open && <nav className="mobile-links">{nav}</nav>}
+    </>
+  );
+}
+export function Footer() {
+  return (
+    <footer className="site-footer">
+      <div className="page-width footer-inner">
+        <Brand />
+        <span>Unlocking Displaced Talent · Kenya</span>
+        <div className="flex gap-5">
+          <Link to="/verify">Verify a passport</Link>
+          <Link to="/admin">Administrator</Link>
+          <span>© {new Date().getFullYear()} Talent Passport</span>
+        </div>
+      </div>
+    </footer>
+  );
+}
+export function Workspace({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  children: ReactNode;
+}) {
+  const { pathname } = useLocation();
+  return (
+    <main className="workspace">
+      <div className="page-width">
+        <nav className="workspace-nav">
+          <Link to="/register" data-active={pathname === "/register"}>
+            <ContactRound size={16} />
+            My profile
+          </Link>
+          <Link to="/credentials" data-active={pathname === "/credentials"}>
+            <FileCheck2 size={16} />
+            Credentials
+          </Link>
+          <Link to="/assessment" data-active={pathname === "/assessment"}>
+            <ClipboardCheck size={16} />
+            Skills assessment
+          </Link>
+          <Link to="/passport" data-active={pathname === "/passport"}>
+            <BookUser size={16} />
+            My passport
+          </Link>
+          <Link to="/impact" data-active={pathname === "/impact"}>
+            <LayoutDashboard size={16} />
+            Impact
+          </Link>
+        </nav>
+        <h1 className="page-title">{title}</h1>
+        <p className="text-muted-foreground text-sm mb-8">{subtitle}</p>
+        {children}
+      </div>
+    </main>
+  );
+}
+export function SignInPrompt() {
+  return (
+    <div className="panel max-w-xl">
+      <h2 className="text-xl font-bold mb-3">Your talent journey starts here</h2>
+      <p className="text-sm text-muted-foreground mb-6">
+        Sign in to keep your profile, documents and assessment results secure.
+      </p>
+      <Button asChild>
+        <Link to="/auth">
+          Sign in or create an account
+          <ArrowRight />
+        </Link>
+      </Button>
+    </div>
+  );
+}
+export function Status({ status }: { status: string }) {
+  return (
+    <span
+      className={`status ${status === "Verified" || status === "Skills assessed" ? "verified" : ""}`}
+    >
+      <FileCheck2 size={12} />
+      {status}
+    </span>
+  );
+}

@@ -1,12 +1,209 @@
-import { createFileRoute,Link } from '@tanstack/react-router'
-import { useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
-import { useCandidate } from '@/hooks/use-candidate'
-import { Workspace,SignInPrompt,Status } from '@/components/site'
-import { categories,questionBanks,pageHead } from '@/lib/talent'
-import { Button } from '@/components/ui/button'
-import { supabase } from '@/integrations/supabase/client'
-import { toast } from 'sonner'
-import { ArrowRight,ArrowLeft,ClipboardCheck } from 'lucide-react'
-export const Route=createFileRoute('/assessment')({head:()=>pageHead('Skills assessment','Demonstrate professional skills through five-question category assessments.'),component:Assess})
-function Assess(){const {data,isPending}=useCandidate();const [category,setCategory]=useState<string>(categories[0]);const [started,setStarted]=useState(false);const [index,setIndex]=useState(0);const [answers,setAnswers]=useState<number[]>([]);const [result,setResult]=useState<{score:number;passed:boolean}|null>(null);const [busy,setBusy]=useState(false);const qc=useQueryClient();const questions=questionBanks[category]||[];const current=questions[index];async function submit(){if(answers.length!==5||answers.some(a=>a===undefined)){toast.error('Answer all five questions');return}setBusy(true);const {data:r,error}=await supabase.rpc('submit_assessment',{_category:category,_answers:answers});setBusy(false);if(error){toast.error(error.message);return}if(r&&typeof r==='object'&&!Array.isArray(r)&&typeof r['score']==='number'&&typeof r['passed']==='boolean')setResult({score:r['score'],passed:r['passed']});await qc.invalidateQueries({queryKey:['candidate']})}function reset(){setStarted(false);setIndex(0);setAnswers([]);setResult(null)}return <Workspace title="Let your skills speak" subtitle="A short professional knowledge assessment is the first step in validating your abilities.">{isPending?<p>Loading…</p>:!data?<SignInPrompt/>:<><div className="panel max-w-3xl">{result?<div className="text-center py-8"><ClipboardCheck className="size-12 mx-auto text-primary mb-5"/><h2 className="text-2xl font-bold">{result.passed?'Your skills have been assessed':'Keep building your skills'}</h2><div className="text-5xl font-bold my-6">{result.score}<span className="text-muted-foreground text-2xl"> / 5</span></div><Status status={result.passed?'Skills assessed':'Bridging recommended'}/><p className="text-sm text-muted-foreground my-6">{result.passed?'You met the 4/5 pass threshold. Your passport now includes this assessed skill.':'You need at least 4 correct answers to pass. Review your knowledge and try again.'}</p><div className="flex justify-center gap-3"><Button variant="outline" onClick={reset}>Try another assessment</Button>{result.passed&&<Button asChild><Link to="/passport">View my passport<ArrowRight/></Link></Button>}</div></div>:!started?<><h2 className="text-xl font-bold mb-5">Choose your professional category</h2><label className="field"><select value={category} onChange={e=>setCategory(e.target.value)}>{categories.map(c=><option key={c}>{c}</option>)}</select></label><div className="grid grid-cols-3 gap-4 my-8 text-center"><div><p className="text-xl font-bold">5</p><p className="text-xs text-muted-foreground">Questions</p></div><div><p className="text-xl font-bold">4/5</p><p className="text-xs text-muted-foreground">Pass threshold</p></div><div><p className="text-xl font-bold">~5 min</p><p className="text-xs text-muted-foreground">Estimated time</p></div></div><Button onClick={()=>setStarted(true)}>Begin assessment<ArrowRight/></Button></>:current?<><div className="flex justify-between text-xs text-muted-foreground mb-4"><span>{category}</span><span>Question {index+1} of 5</span></div><progress value={index+1} max={5} className="w-full h-2 accent-primary"/><h2 className="text-xl font-bold mt-7 mb-5">{current.question}</h2>{current.options.map((o,i)=><label className="assessment-option" key={o}><input type="radio" name="answer" value={i} checked={answers[index]===i} onChange={()=>setAnswers(old=>{const next=[...old];next[index]=i;return next})}/>{o}</label>)}<div className="flex justify-between mt-8"><Button variant="outline" disabled={index===0||busy} onClick={()=>setIndex(index-1)}><ArrowLeft/>Back</Button>{index<4?<Button disabled={answers[index]===undefined} onClick={()=>setIndex(index+1)}>Next<ArrowRight/></Button>:<Button disabled={busy||answers[index]===undefined} onClick={submit}>{busy?'Calculating…':'Submit assessment'}</Button>}</div></>:null}</div><p className="notice max-w-3xl">Knowledge assessment only. This does not verify academic credentials or grant professional licensing. Practical assessment and expanded question banks are future additions.</p>{Boolean(data.assessments?.length)&&<section className="mt-8 max-w-3xl"><h2 className="font-bold mb-4">Your assessment history</h2>{data.assessments?.map(a=><div className="panel mb-3 flex justify-between items-center" key={a.id}><div className="text-sm font-semibold">{a.category}<p className="text-xs font-normal text-muted-foreground mt-1">{new Date(a.created_at).toLocaleDateString()} · {a.score}/5</p></div><Status status={a.passed?'Skills assessed':'Bridging recommended'}/></div>)}</section>}</>}</Workspace>}
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCandidate } from "@/hooks/use-candidate";
+import { Workspace, SignInPrompt, Status } from "@/components/site";
+import { categories, questionBanks, pageHead } from "@/lib/talent";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { ArrowRight, ArrowLeft, ClipboardCheck } from "lucide-react";
+export const Route = createFileRoute("/assessment")({
+  head: () =>
+    pageHead(
+      "Skills assessment",
+      "Demonstrate professional skills through five-question category assessments.",
+    ),
+  component: Assess,
+});
+function Assess() {
+  const { data, isPending } = useCandidate();
+  const [category, setCategory] = useState<string>(categories[0]);
+  const [started, setStarted] = useState(false);
+  const [index, setIndex] = useState(0);
+  const [answers, setAnswers] = useState<number[]>([]);
+  const [result, setResult] = useState<{ score: number; passed: boolean } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const qc = useQueryClient();
+  const questions = questionBanks[category] || [];
+  const current = questions[index];
+  async function submit() {
+    if (answers.length !== 5 || answers.some((a) => a === undefined)) {
+      toast.error("Answer all five questions");
+      return;
+    }
+    setBusy(true);
+    const { data: r, error } = await supabase.rpc("submit_assessment", {
+      _category: category,
+      _answers: answers,
+    });
+    setBusy(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    if (
+      r &&
+      typeof r === "object" &&
+      !Array.isArray(r) &&
+      typeof r["score"] === "number" &&
+      typeof r["passed"] === "boolean"
+    )
+      setResult({ score: r["score"], passed: r["passed"] });
+    await qc.invalidateQueries({ queryKey: ["candidate"] });
+  }
+  function reset() {
+    setStarted(false);
+    setIndex(0);
+    setAnswers([]);
+    setResult(null);
+  }
+  return (
+    <Workspace
+      title="Let your skills speak"
+      subtitle="A short professional knowledge assessment is the first step in validating your abilities."
+    >
+      {isPending ? (
+        <p>Loading…</p>
+      ) : !data ? (
+        <SignInPrompt />
+      ) : (
+        <>
+          <div className="panel max-w-3xl">
+            {result ? (
+              <div className="text-center py-8">
+                <ClipboardCheck className="size-12 mx-auto text-primary mb-5" />
+                <h2 className="text-2xl font-bold">
+                  {result.passed ? "Your skills have been assessed" : "Keep building your skills"}
+                </h2>
+                <div className="text-5xl font-bold my-6">
+                  {result.score}
+                  <span className="text-muted-foreground text-2xl"> / 5</span>
+                </div>
+                <Status status={result.passed ? "Skills assessed" : "Bridging recommended"} />
+                <p className="text-sm text-muted-foreground my-6">
+                  {result.passed
+                    ? "You met the 4/5 pass threshold. Your passport now includes this assessed skill."
+                    : "You need at least 4 correct answers to pass. Review your knowledge and try again."}
+                </p>
+                <div className="flex justify-center gap-3">
+                  <Button variant="outline" onClick={reset}>
+                    Try another assessment
+                  </Button>
+                  {result.passed && (
+                    <Button asChild>
+                      <Link to="/passport">
+                        View my passport
+                        <ArrowRight />
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ) : !started ? (
+              <>
+                <h2 className="text-xl font-bold mb-5">Choose your professional category</h2>
+                <label className="field">
+                  <select value={category} onChange={(e) => setCategory(e.target.value)}>
+                    {categories.map((c) => (
+                      <option key={c}>{c}</option>
+                    ))}
+                  </select>
+                </label>
+                <div className="grid grid-cols-3 gap-4 my-8 text-center">
+                  <div>
+                    <p className="text-xl font-bold">5</p>
+                    <p className="text-xs text-muted-foreground">Questions</p>
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold">4/5</p>
+                    <p className="text-xs text-muted-foreground">Pass threshold</p>
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold">~5 min</p>
+                    <p className="text-xs text-muted-foreground">Estimated time</p>
+                  </div>
+                </div>
+                <Button onClick={() => setStarted(true)}>
+                  Begin assessment
+                  <ArrowRight />
+                </Button>
+              </>
+            ) : current ? (
+              <>
+                <div className="flex justify-between text-xs text-muted-foreground mb-4">
+                  <span>{category}</span>
+                  <span>Question {index + 1} of 5</span>
+                </div>
+                <progress value={index + 1} max={5} className="w-full h-2 accent-primary" />
+                <h2 className="text-xl font-bold mt-7 mb-5">{current.question}</h2>
+                {current.options.map((o, i) => (
+                  <label className="assessment-option" key={o}>
+                    <input
+                      type="radio"
+                      name="answer"
+                      value={i}
+                      checked={answers[index] === i}
+                      onChange={() =>
+                        setAnswers((old) => {
+                          const next = [...old];
+                          next[index] = i;
+                          return next;
+                        })
+                      }
+                    />
+                    {o}
+                  </label>
+                ))}
+                <div className="flex justify-between mt-8">
+                  <Button
+                    variant="outline"
+                    disabled={index === 0 || busy}
+                    onClick={() => setIndex(index - 1)}
+                  >
+                    <ArrowLeft />
+                    Back
+                  </Button>
+                  {index < 4 ? (
+                    <Button
+                      disabled={answers[index] === undefined}
+                      onClick={() => setIndex(index + 1)}
+                    >
+                      Next
+                      <ArrowRight />
+                    </Button>
+                  ) : (
+                    <Button disabled={busy || answers[index] === undefined} onClick={submit}>
+                      {busy ? "Calculating…" : "Submit assessment"}
+                    </Button>
+                  )}
+                </div>
+              </>
+            ) : null}
+          </div>
+          <p className="notice max-w-3xl">
+            Knowledge assessment only. This does not verify academic credentials or grant
+            professional licensing. Practical assessment and expanded question banks are future
+            additions.
+          </p>
+          {Boolean(data.assessments?.length) && (
+            <section className="mt-8 max-w-3xl">
+              <h2 className="font-bold mb-4">Your assessment history</h2>
+              {data.assessments?.map((a) => (
+                <div className="panel mb-3 flex justify-between items-center" key={a.id}>
+                  <div className="text-sm font-semibold">
+                    {a.category}
+                    <p className="text-xs font-normal text-muted-foreground mt-1">
+                      {new Date(a.created_at).toLocaleDateString()} · {a.score}/5
+                    </p>
+                  </div>
+                  <Status status={a.passed ? "Skills assessed" : "Bridging recommended"} />
+                </div>
+              ))}
+            </section>
+          )}
+        </>
+      )}
+    </Workspace>
+  );
+}

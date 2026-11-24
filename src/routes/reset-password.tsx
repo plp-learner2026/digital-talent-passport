@@ -1,8 +1,60 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useState,useEffect,type FormEvent } from 'react'
-import { supabase } from '@/integrations/supabase/client'
-import { Button } from '@/components/ui/button'
-import { pageHead } from '@/lib/talent'
-import { toast } from 'sonner'
-export const Route=createFileRoute('/reset-password')({head:()=>pageHead('Reset password','Set a new password using your secure account recovery link.'),component:Reset})
-function Reset(){const [recovery,setRecovery]=useState(false);const [busy,setBusy]=useState(false);useEffect(()=>{setRecovery(new URLSearchParams(window.location.hash.slice(1)).get('type')==='recovery');const {data}=supabase.auth.onAuthStateChange(e=>{if(e==='PASSWORD_RECOVERY')setRecovery(true)});return()=>data.subscription.unsubscribe()},[]);async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();const f=new FormData(e.currentTarget);const password=String(f.get('password'));if(password!==f.get('confirm')||password.length<8){toast.error('Passwords must match and contain at least 8 characters');return}setBusy(true);const {error}=await supabase.auth.updateUser({password});setBusy(false);if(error)toast.error(error.message);else toast.success('Password updated. You can now sign in.')}return <main className="workspace"><div className="panel auth-panel"><h1 className="page-title">Set a new password</h1>{recovery?<form onSubmit={submit} className="flex flex-col gap-5 mt-6"><label className="field">New password<input type="password" name="password" minLength={8} required/></label><label className="field">Confirm password<input type="password" name="confirm" minLength={8} required/></label><Button disabled={busy}>Update password</Button></form>:<p className="notice">Open the password recovery link from your email to reset your password.</p>}</div></main>}
+import { createFileRoute } from "@tanstack/react-router";
+import { useState, useEffect, type FormEvent } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { pageHead } from "@/lib/talent";
+import { toast } from "sonner";
+export const Route = createFileRoute("/reset-password")({
+  head: () =>
+    pageHead("Reset password", "Set a new password using your secure account recovery link."),
+  component: Reset,
+});
+function Reset() {
+  const [recovery, setRecovery] = useState(false);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    setRecovery(new URLSearchParams(window.location.hash.slice(1)).get("type") === "recovery");
+    const { data } = supabase.auth.onAuthStateChange((e) => {
+      if (e === "PASSWORD_RECOVERY") setRecovery(true);
+    });
+    return () => data.subscription.unsubscribe();
+  }, []);
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    const password = String(f.get("password"));
+    if (password !== f.get("confirm") || password.length < 8) {
+      toast.error("Passwords must match and contain at least 8 characters");
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.auth.updateUser({ password });
+    setBusy(false);
+    if (error) toast.error(error.message);
+    else toast.success("Password updated. You can now sign in.");
+  }
+  return (
+    <main className="workspace">
+      <div className="panel auth-panel">
+        <h1 className="page-title">Set a new password</h1>
+        {recovery ? (
+          <form onSubmit={submit} className="flex flex-col gap-5 mt-6">
+            <label className="field">
+              New password
+              <input type="password" name="password" minLength={8} required />
+            </label>
+            <label className="field">
+              Confirm password
+              <input type="password" name="confirm" minLength={8} required />
+            </label>
+            <Button disabled={busy}>Update password</Button>
+          </form>
+        ) : (
+          <p className="notice">
+            Open the password recovery link from your email to reset your password.
+          </p>
+        )}
+      </div>
+    </main>
+  );
+}
