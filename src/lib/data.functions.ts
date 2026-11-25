@@ -25,7 +25,7 @@ export const getImpact = createServerFn({ method: "GET" }).handler(async () => {
   return data;
 });
 export const getDemo = createServerFn({ method: "GET" }).handler(async () => {
-  const { data, error } = await publicClient().from("demo_talents").select("*");
+  const { data, error } = await publicClient().rpc("demo_talent_list");
   if (error) throw error;
   return data;
 });

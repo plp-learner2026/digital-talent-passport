@@ -200,6 +200,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      demo_talent_list: {
+        Args: never
+        Returns: {
+          category: string
+          city: string
+          education: string
+          experience: number
+          full_name: string
+          id: string
+          score: number
+          status: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "demo_talents"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
